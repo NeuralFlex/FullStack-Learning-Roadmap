@@ -1,3 +1,1 @@
-"""
-Phase 2: Routers Package
-"""
+# Routers package for Media Processing API

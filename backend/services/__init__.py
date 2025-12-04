@@ -1,3 +1,1 @@
-"""
-Phase 2: Services Package
-"""
+# Services package for Media Processing API
