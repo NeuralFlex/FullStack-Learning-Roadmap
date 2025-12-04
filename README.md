@@ -166,6 +166,22 @@ uvicorn main:app --reload --host 0.0.0.0 --port 8000
 
 **API Documentation**: http://localhost:8000/docs
 
+#### Backend Project Structure
+```
+backend/
+├── main.py                 # FastAPI application entry point
+├── config.py               # Configuration management with environment variables
+├── services/
+│   ├── __init__.py
+│   └── s3_service.py       # S3 operations service layer
+├── routers/
+│   ├── __init__.py
+│   └── media.py           # Media API endpoints router
+├── requirements.txt        # Python dependencies
+├── .env.example           # Environment variables template
+└── tests/                 # Backend test suite
+```
+
 ### AWS S3 Setup
 
 1. **Create S3 Bucket**:
@@ -283,11 +299,13 @@ The backend API is fully documented using OpenAPI/Swagger:
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | `GET` | `/` | API status and welcome message |
-| `POST` | `/generate-upload-url` | Generate S3 upload presigned URL |
-| `POST` | `/generate-download-url` | Generate S3 download presigned URL |
-| `GET` | `/list-objects` | List all objects in S3 bucket |
-| `DELETE` | `/delete-object` | Delete object from S3 bucket |
-| `GET` | `/health` | Health check with S3 connectivity |
+| `POST` | `/media/upload-url` | Generate S3 upload presigned URL |
+| `GET` | `/media/download-url/{key}` | Generate S3 download presigned URL for a specific file |
+| `GET` | `/media/files` | List all objects in S3 bucket |
+| `DELETE` | `/media/files/{key}` | Delete specific object from S3 bucket |
+| `GET` | `/health` | Health check with S3 connectivity testing |
+| `GET` | `/docs` | Interactive API documentation (Swagger UI) |
+| `GET` | `/redoc` | Alternative API documentation |
 
 ### API Access
 
@@ -465,18 +483,26 @@ cd backend && pytest tests/ -v
 ```
 media-processing-app/
 ├── frontend/                 # React TypeScript application
-│   └── src/
-│       ├── components/      # Reusable UI components
-│       ├── services/       # API client services
-│       └── types/          # TypeScript definitions
-├── backend/                 # FastAPI application
-│   ├── main.py             # Main FastAPI app
+│   ├── src/
+│   │   ├── components/      # Reusable UI components
+│   │   ├── services/       # API client services
+│   │   └── types/          # TypeScript definitions
+│   ├── Dockerfile          # Frontend containerization
+│   └── package.json        # Frontend dependencies
+├── backend/                 # FastAPI application (Phase 2)
+│   ├── main.py             # FastAPI application entry point
+│   ├── config.py           # Configuration management
+│   ├── services/           # Business logic services
+│   │   └── s3_service.py   # AWS S3 operations
+│   ├── routers/            # API route handlers
+│   │   └── media.py        # Media management endpoints
 │   ├── requirements.txt    # Python dependencies
-│   └── tests/              # Backend tests
-├── .github/
-│   └── workflows/          # CI/CD pipelines
-├── docker-compose.yml      # Local development
-└── cdk/                    # Infrastructure as Code
+│   ├── .env.example        # Environment variables template
+│   ├── Dockerfile          # Backend containerization
+│   └── tests/              # Backend test suite
+├── .env.example            # Global environment template
+├── docker-compose.yml      # Multi-service development setup
+└── README.md               # Project documentation
 ```
 
 ### Environment Management
