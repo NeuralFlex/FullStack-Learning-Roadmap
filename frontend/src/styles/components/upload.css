@@ -1,0 +1,80 @@
+/* UPLOAD STYLES */
+
+/* UPLOAD SECTION */
+.upload-section {
+  margin-bottom: var(--spacing-2xl);
+}
+
+.upload-dropzone {
+  border: 2px dashed var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-2xl);
+  text-align: center;
+  cursor: pointer;
+  transition: all var(--transition-base);
+  background-color: var(--color-bg);
+}
+
+.upload-dropzone:hover {
+  border-color: var(--color-accent);
+  background-color: rgba(59, 130, 246, 0.02);
+}
+
+.upload-dropzone.dragging {
+  border-color: var(--color-accent);
+  background-color: rgba(59, 130, 246, 0.05);
+  box-shadow: var(--shadow-md);
+}
+
+.upload-icon {
+  font-size: 3rem;
+  margin-bottom: var(--spacing-md);
+}
+
+.upload-content h3 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin-bottom: var(--spacing-sm);
+  color: var(--color-text);
+}
+
+.upload-content p {
+  color: var(--color-text-light);
+  margin: var(--spacing-sm) 0;
+}
+
+.upload-hint {
+  font-size: 0.875rem;
+  color: var(--color-text-light);
+  margin-top: var(--spacing-md) !important;
+}
+
+.loading-banner {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  background-color: rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-md) var(--spacing-lg);
+  margin-top: var(--spacing-md);
+  color: var(--color-accent);
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(59, 130, 246, 0.3);
+  border-top-color: var(--color-accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
