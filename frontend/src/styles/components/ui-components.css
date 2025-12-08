@@ -1,0 +1,198 @@
+/* UI COMPONENTS STYLES */
+
+/* TOAST NOTIFICATIONS */
+.toast-container {
+  position: fixed;
+  bottom: var(--spacing-lg);
+  right: var(--spacing-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  z-index: 1000;
+  pointer-events: none;
+}
+
+.toast {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  font-size: 0.95rem;
+  font-weight: 500;
+  animation: slideIn 300ms cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: auto;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(400px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.toast-success {
+  background-color: var(--color-success);
+  color: white;
+}
+
+.toast-error {
+  background-color: var(--color-error);
+  color: white;
+}
+
+.toast-info {
+  background-color: var(--color-accent);
+  color: white;
+}
+
+.toast-icon {
+  font-size: 1.25rem;
+  font-weight: bold;
+}
+
+/* ALERT DIALOG */
+.alert-dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+}
+
+.alert-dialog {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1001;
+  padding: var(--spacing-lg);
+}
+
+.alert-dialog-content {
+  background: white;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-xl);
+  max-width: 400px;
+  width: 100%;
+  padding: var(--spacing-xl);
+}
+
+.alert-dialog-header {
+  margin-bottom: var(--spacing-md);
+}
+
+.alert-dialog-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin: 0;
+}
+
+.alert-dialog-description {
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+  margin-bottom: var(--spacing-lg);
+}
+
+.alert-dialog-actions {
+  display: flex;
+  gap: var(--spacing-md);
+  justify-content: flex-end;
+}
+
+.alert-dialog-cancel {
+  background: transparent;
+  border: 1px solid var(--color-border);
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-weight: 500;
+  color: var(--color-text);
+  transition: background-color 0.2s;
+}
+
+.alert-dialog-cancel:hover {
+  background-color: var(--color-bg-secondary);
+}
+
+.alert-dialog-confirm {
+  background: var(--color-primary);
+  border: 1px solid var(--color-primary);
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-weight: 500;
+  color: white;
+  transition: background-color 0.2s;
+}
+
+.alert-dialog-confirm:hover {
+  background-color: var(--color-primary-dark);
+}
+
+/* INLINE ALERTS */
+.alert {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md);
+  border-radius: var(--radius-md);
+  font-size: 0.9rem;
+  font-weight: 500;
+  border: 1px solid;
+}
+
+.alert-icon {
+  font-size: 1.25rem;
+  font-weight: bold;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.alert-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.alert-title {
+  font-weight: 600;
+  margin: 0;
+}
+
+.alert-message {
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* Alert variants - matching toast colors */
+.alert-success {
+  background-color: rgba(34, 197, 94, 0.1);
+  border-color: rgb(34, 197, 94);
+  color: rgb(34, 197, 94);
+}
+
+.alert-error {
+  background-color: rgba(239, 68, 68, 0.1);
+  border-color: rgb(239, 68, 68);
+  color: rgb(239, 68, 68);
+}
+
+.alert-warning {
+  background-color: rgba(251, 191, 36, 0.1);
+  border-color: rgb(251, 191, 36);
+  color: rgb(154, 52, 18);
+}
+
+.alert-info {
+  background-color: rgba(59, 130, 246, 0.1);
+  border-color: rgb(59, 130, 246);
+  color: rgb(59, 130, 246);
+}

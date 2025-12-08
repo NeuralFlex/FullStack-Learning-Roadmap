@@ -1,0 +1,10 @@
+@import 'tailwindcss';
+
+@layer base {
+  * {
+    @apply border-gray-200 outline-blue-500/50;
+  }
+  body {
+    @apply bg-white text-gray-900;
+  }
+}
