@@ -1,0 +1,7 @@
+/* Import component stylesheets for better organization */
+@import './components/layout.css';
+@import './components/navigation.css';
+@import './components/upload.css';
+@import './components/media-grid.css';
+@import './components/ui-components.css';
+@import './components/responsive.css';
