@@ -17,3 +17,5 @@ export const SettingsSection: React.FC = React.memo(() => {
     </section>
   )
 })
+
+SettingsSection.displayName = 'SettingsSection'

@@ -79,3 +79,5 @@ export const MediaCard: React.FC<MediaCardProps> = React.memo(({
     </div>
   )
 })
+
+MediaCard.displayName = 'MediaCard'

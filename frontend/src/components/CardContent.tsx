@@ -10,9 +10,7 @@ interface CardContentProps {
 
 
 
-export const CardContent: React.FC<CardContentProps> = ({ file, onDelete, onDownload, children }) => {
-  const isImage = file.file.type.startsWith("image/")
-
+export const CardContent: React.FC<CardContentProps> = ({ file, onDelete: _onDelete, onDownload: _onDownload, children }) => {
   return (
     <div className="card-content">
       <div className="card-header">

@@ -86,3 +86,5 @@ export const VideoToolsSection: React.FC<VideoToolsSectionProps> = React.memo(({
     </section>
   )
 })
+
+VideoToolsSection.displayName = 'VideoToolsSection'

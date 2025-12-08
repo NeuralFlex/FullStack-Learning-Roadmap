@@ -46,3 +46,5 @@ export const DashboardSection: React.FC<DashboardSectionProps> = React.memo(({
     </section>
   )
 })
+
+DashboardSection.displayName = 'DashboardSection'

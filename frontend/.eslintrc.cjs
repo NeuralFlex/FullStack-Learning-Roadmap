@@ -22,6 +22,9 @@ module.exports = {
   plugins: ['@typescript-eslint'],
   rules: {
     '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
+    'react/prop-types': 'off',
+    'react/display-name': 'warn',
+    'react-hooks/exhaustive-deps': 'off',
   },
   settings: {
     react: {
