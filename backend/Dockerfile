@@ -36,6 +36,9 @@ RUN addgroup --system fastapi && adduser --system --ingroup fastapi fastapi
 # Change ownership of the app directory
 RUN chown -R fastapi:fastapi /app
 
+# Copy environment file if it exists (optional)
+COPY .env* /app/
+
 # Switch to non-root user
 USER fastapi
 
