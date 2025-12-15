@@ -1,7 +1,6 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useEffect, useRef } from 'react';
 import type { CloudFile } from '../types';
 import {
-  fetchFiles,
   generateUploadUrl,
   generateDownloadUrl,
   deleteFileApi,
@@ -10,75 +9,51 @@ import {
   isMediaFile
 } from '../services/api';
 import { useToast } from '../hooks/useToast';
+import { useCloudStorageState } from '../hooks/useCloudStorageState';
 import { formatFileSize } from '../utils';
 import { ProgressModal } from './ProgressModal';
-
-interface UploadProgress {
-  file: File;
-  progress: number;
-  status: 'pending' | 'uploading' | 'completed' | 'error';
-}
-
-interface DownloadProgress {
-  file: CloudFile;
-  progress: number;
-  status: 'pending' | 'downloading' | 'completed' | 'error';
-}
 
 interface CloudStorageGalleryProps {
   activeTab: string;
 }
 
 export const CloudStorageGallery: React.FC<CloudStorageGalleryProps> = ({ activeTab }) => {
-  const [files, setFiles] = useState<CloudFile[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [uploading, setUploading] = useState(false);
-  const [showUploadModal, setShowUploadModal] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState<UploadProgress[]>([]);
-  const [showDownloadModal, setShowDownloadModal] = useState(false);
-  const [downloading, setDownloading] = useState(false);
-  const [downloadProgress, setDownloadProgress] = useState<DownloadProgress[]>([]);
-  const [deleteConfirm, setDeleteConfirm] = useState<{ show: boolean; file?: CloudFile }>({ show: false });
+  // Always call hooks first - Rules of Hooks must be respected
+  const {
+    files,
+    loading,
+    uploading,
+    showUploadModal,
+    uploadProgress,
+    showDownloadModal,
+    downloading,
+    downloadProgress,
+    deleteConfirm,
+    setFiles,
+    setShowUploadModal,
+    loadFiles,
+    startUpload,
+    updateUploadProgress,
+    finishUpload,
+    setShowDownloadModal,
+    startDownload,
+    updateDownloadProgress,
+    finishDownload,
+    showDeleteConfirm,
+    hideDeleteConfirm,
+  } = useCloudStorageState();
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const initializedRef = useRef<string | null>(null);
   const { addToast } = useToast();
 
-  const loadFiles = useCallback(async () => {
-    setLoading(true);
-    try {
-      const cloudFiles = await fetchFiles();
-
-      // Generate preview URLs for media files
-      const filesWithPreviews = await Promise.all(
-        cloudFiles.map(async (file) => {
-          if (isMediaFile(file.key)) {
-            try {
-              const downloadResponse = await generateDownloadUrl(file.key);
-              return { ...file, previewUrl: downloadResponse.download_url };
-            } catch (error) {
-              console.warn(`Failed to generate preview URL for ${file.key}:`, error);
-              return file;
-            }
-          }
-          return file;
-        })
-      );
-
-      setFiles(filesWithPreviews);
-    } catch (error) {
-      console.error('Error loading files:', error);
-      addToast('Failed to load files from cloud storage', 'error');
-    } finally {
-      setLoading(false);
-    }
-  }, [addToast, setFiles]);
-
-  // Load files on component mount and when activeTab changes to cloud-storage
+  // Load files only when tab becomes active (not on every render)
   useEffect(() => {
-    if (activeTab === 'cloud-storage') {
-      loadFiles();
+    if (activeTab === 'cloud-storage' && initializedRef.current !== activeTab) {
+      initializedRef.current = activeTab;
+      loadFiles(); // This will use cached data if available
     }
-  }, [activeTab, loadFiles]);
+  }, [activeTab]); // Only depend on activeTab to prevent unnecessary re-runs
 
   const handleFileSelect = () => {
     if (fileInputRef.current) {
@@ -95,24 +70,14 @@ export const CloudStorageGallery: React.FC<CloudStorageGalleryProps> = ({ active
   };
 
   const uploadFiles = async (filesToUpload: File[]) => {
-    setUploading(true);
-
-    const progressItems: UploadProgress[] = filesToUpload.map(file => ({
-      file,
-      progress: 0,
-      status: 'pending'
-    }));
-    setUploadProgress(progressItems);
-    setShowUploadModal(true);
+    startUpload(filesToUpload);
 
     try {
       for (let i = 0; i < filesToUpload.length; i++) {
         const file = filesToUpload[i];
 
         // Update status to uploading
-        setUploadProgress(prev => prev.map((item, index) =>
-          index === i ? { ...item, status: 'uploading' } : item
-        ));
+        updateUploadProgress(i, { status: 'uploading' });
 
         try {
           // Generate upload URL
@@ -121,92 +86,66 @@ export const CloudStorageGallery: React.FC<CloudStorageGalleryProps> = ({ active
             contentType: file.type
           });
 
-
-
           // Upload to S3
           await uploadFileToS3(
             file,
             uploadResponse.upload_url,
             (progress) => {
-              setUploadProgress(prev => prev.map((item, index) =>
-                index === i ? { ...item, progress, status: 'uploading' } : item
-              ));
+              updateUploadProgress(i, { progress, status: 'uploading' });
             }
           );
 
           // Mark as completed
-          setUploadProgress(prev => prev.map((item, index) =>
-            index === i ? { ...item, status: 'completed', progress: 100 } : item
-          ));
-
+          updateUploadProgress(i, { status: 'completed', progress: 100 });
           addToast(`${file.name} uploaded successfully`, 'success');
 
         } catch (error) {
           // Mark as error
-          setUploadProgress(prev => prev.map((item, index) =>
-            index === i ? { ...item, status: 'error' } : item
-          ));
+          updateUploadProgress(i, { status: 'error' });
           addToast(`Failed to upload ${file.name}`, 'error');
         }
       }
 
       // Refresh file list after all uploads are complete
-      await loadFiles();
+      await loadFiles(true); // Force refresh to get latest data
 
     } finally {
-      setUploading(false);
+      finishUpload();
     }
   };
 
   const handleDownload = async (file: CloudFile) => {
-    setDownloading(true);
-
-    const progressItems: DownloadProgress[] = [{
-      file,
-      progress: 0,
-      status: 'pending'
-    }];
-    setDownloadProgress(progressItems);
-    setShowDownloadModal(true);
+    startDownload(file);
 
     try {
       // Update status to downloading
-      setDownloadProgress(prev => prev.map((item) =>
-        item.file.key === file.key ? { ...item, status: 'downloading' } : item
-      ));
+      updateDownloadProgress(file.key, { status: 'downloading' });
 
       const downloadResponse = await generateDownloadUrl(file.key);
 
       await downloadFileFromS3(
         downloadResponse.download_url,
-        file.key.split('/').pop() || file.key,
+        file.key?.split('/').pop() || file.key || 'unknown-file',
         (progress) => {
-          setDownloadProgress(prev => prev.map((item) =>
-            item.file.key === file.key ? { ...item, progress, status: 'downloading' } : item
-          ));
+          updateDownloadProgress(file.key || '', { progress, status: 'downloading' });
         }
       );
 
       // Mark as completed
-      setDownloadProgress(prev => prev.map((item) =>
-        item.file.key === file.key ? { ...item, status: 'completed', progress: 100 } : item
-      ));
-
-      addToast(`${file.key} downloaded successfully`, 'success');
+      updateDownloadProgress(file.key || '', { status: 'completed', progress: 100 });
+      addToast(`${file.key?.split('/').pop() || file.key || 'File'} downloaded successfully`, 'success');
     } catch (error) {
       console.error('Error downloading file:', error);
       // Mark as error
-      setDownloadProgress(prev => prev.map((item) =>
-        item.file.key === file.key ? { ...item, status: 'error' } : item
-      ));
-      addToast(`Failed to download ${file.key}`, 'error');
+      updateDownloadProgress(file.key || '', { status: 'error' });
+      addToast(`Failed to download ${file.key?.split('/').pop() || file.key || 'file'}`, 'error');
     } finally {
-      setDownloading(false);
+      finishDownload();
     }
   };
 
   const handleDelete = (file: CloudFile) => {
-    setDeleteConfirm({ show: true, file });
+    showDeleteConfirm(file);
   };
 
   const confirmDelete = async () => {
@@ -221,12 +160,11 @@ export const CloudStorageGallery: React.FC<CloudStorageGalleryProps> = ({ active
       console.error('Error deleting file:', error);
       addToast(`Failed to delete ${file.key}`, 'error');
     } finally {
-      setDeleteConfirm({ show: false });
+      hideDeleteConfirm();
     }
   };
 
-
-
+  // Early return for inactive tabs - in JSX, not before hooks
   if (activeTab !== 'cloud-storage') return null;
 
   return (
@@ -267,44 +205,48 @@ export const CloudStorageGallery: React.FC<CloudStorageGalleryProps> = ({ active
               <p>Upload some files to get started.</p>
             </div>
           ) : (
-            files.map((file, _index) => (
-              <div key={file.key} className="file-card">
-                <div className="file-preview">
-                  {file.previewUrl ? (
-                    isMediaFile(file.key) && file.key.toLowerCase().includes('.mp4') ? (
-                      // Video preview
-                      <video
-                        src={file.previewUrl}
-                        controls={false}
-                        className="w-full h-32 object-cover rounded-md"
-                        onLoadedData={(e) => {
-                          e.currentTarget.currentTime = 0.5; // Show thumbnail
-                        }}
-                      />
-                    ) : (
-                      // Image preview
-                      <img
-                        src={file.previewUrl}
-                        alt={file.key}
-                        className="w-full h-32 object-cover rounded-md"
-                      />
-                    )
-                  ) : (
-                    // File icon for non-media files
-                    <div className="file-icon">
-                      📄
-                    </div>
-                  )}
-                </div>
+            files.map((file, _index) => {
+              const fileKey = file?.key || '';
+              const fileName = fileKey.split('/').pop() || fileKey || 'Unknown File';
 
-                <div className="file-info">
-                  <h4 className="file-name" title={file.key}>
-                    {file.key.split('/').pop() || file.key}
-                  </h4>
-                  <div className="file-details">
-                    <span className="file-size">{formatFileSize(file.size)}</span>
+              return (
+                <div key={fileKey || _index} className="file-card">
+                  <div className="file-preview">
+                    {file?.previewUrl ? (
+                      isMediaFile(fileKey) && fileKey.toLowerCase().includes('.mp4') ? (
+                        // Video preview
+                        <video
+                          src={file.previewUrl}
+                          controls={false}
+                          className="w-full h-32 object-cover rounded-md"
+                          onLoadedData={(e) => {
+                            e.currentTarget.currentTime = 0.5; // Show thumbnail
+                          }}
+                        />
+                      ) : (
+                        // Image preview
+                        <img
+                          src={file.previewUrl}
+                          alt={fileName}
+                          className="w-full h-32 object-cover rounded-md"
+                        />
+                      )
+                    ) : (
+                      // File icon for non-media files
+                      <div className="file-icon">
+                        📄
+                      </div>
+                    )}
                   </div>
-                </div>
+
+                  <div className="file-info">
+                    <h4 className="file-name" title={fileKey}>
+                      {fileName}
+                    </h4>
+                    <div className="file-details">
+                      <span className="file-size">{formatFileSize(file?.size || 0)}</span>
+                    </div>
+                  </div>
 
                 <div className="file-actions">
                   <button
@@ -323,7 +265,8 @@ export const CloudStorageGallery: React.FC<CloudStorageGalleryProps> = ({ active
                   </button>
                 </div>
               </div>
-            ))
+              );
+            })
           )}
         </div>
       )}
@@ -347,18 +290,18 @@ export const CloudStorageGallery: React.FC<CloudStorageGalleryProps> = ({ active
       />
 
       {/* Delete Confirmation Dialog */}
-      {deleteConfirm.show && (
+      {deleteConfirm.show && deleteConfirm.file && (
         <div className="modal-overlay">
           <div className="modal">
             <div className="modal-header">
               <h3>Confirm Delete</h3>
             </div>
             <div className="modal-body">
-              <p>Are you sure you want to delete &#34;{deleteConfirm.file?.key.split('/').pop()}&#34;? This action cannot be undone.</p>
+              <p>Are you sure you want to delete &#34;{deleteConfirm.file.key?.split('/').pop() || deleteConfirm.file.key || 'this file'}&#34;? This action cannot be undone.</p>
             </div>
             <div className="modal-actions">
               <button
-                onClick={() => setDeleteConfirm({ show: false })}
+                onClick={hideDeleteConfirm}
                 className="secondary-button"
               >
                 Cancel

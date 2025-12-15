@@ -7,8 +7,9 @@ import type {
   ListFilesResponse,
   DeleteResponse
 } from '../types';
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+import { API_BASE_URL } from '../constants/env';
+import { API_ENDPOINTS } from '../constants/apiEndpoints';
+import { MEDIA_EXTENSIONS, MediaExtension } from '../constants/media';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -17,13 +18,8 @@ const api = axios.create({
   },
 });
 
-// API Endpoints
-export const apiEndpoints = {
-  listFiles: '/media/files',
-  uploadUrl: '/media/upload-url',
-  downloadUrl: (key: string) => `/media/download-url/${encodeURIComponent(key)}`,
-  deleteFile: (key: string) => `/media/files/${encodeURIComponent(key)}`,
-};
+// API Endpoints - re-exported for backward compatibility
+export const apiEndpoints = API_ENDPOINTS;
 
 /**
  * Fetch all files from the S3 bucket
@@ -164,7 +160,7 @@ export const downloadFileFromS3 = async (
  */
 export const isMediaFile = (key: string): boolean => {
   const ext = key.toLowerCase().split('.').pop();
-  return ext ? ['jpg', 'jpeg', 'png', 'gif', 'webp', 'mp4', 'mov', 'avi', 'webm'].includes(ext) : false;
+  return ext ? MEDIA_EXTENSIONS.includes(ext as MediaExtension) : false;
 };
 
 export default api;

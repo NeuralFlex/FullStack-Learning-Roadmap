@@ -1,10 +1,11 @@
 import React from 'react';
 import { formatFileSize } from '../utils';
+import type { ProgressStatus } from '../types';
 
 interface ProgressItem {
   file: { name?: string; key?: string; size: number };
   progress: number;
-  status: 'pending' | 'uploading' | 'downloading' | 'completed' | 'error';
+  status: ProgressStatus;
 }
 
 interface ProgressModalProps {

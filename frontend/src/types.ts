@@ -56,3 +56,6 @@ export interface DeleteResponse {
   message: string
   key: string
 }
+
+// Progress status types for upload/download operations
+export type ProgressStatus = 'pending' | 'uploading' | 'downloading' | 'completed' | 'error';
