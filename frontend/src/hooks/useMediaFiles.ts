@@ -1,9 +1,9 @@
-import { useState, useRef, useCallback, useMemo } from "react"
+import { useState, useCallback, useMemo } from "react"
 import { FFmpeg } from "@ffmpeg/ffmpeg"
-import imageCompression from "browser-image-compression"
 import type { MediaFile } from "../types"
 
-const MAX_VIDEO_SIZE = 200 * 1024 * 1024
+const MAX_VIDEO_SIZE_MB = parseInt(import.meta.env.VITE_MAX_VIDEO_SIZE_MB || "200")
+const MAX_VIDEO_SIZE = MAX_VIDEO_SIZE_MB * 1024 * 1024
 
 export const useMediaFiles = (ffmpegRef: React.RefObject<FFmpeg | null>, ffmpegLoaded: boolean, addToast: (message: string, type: "success" | "error" | "info") => void, setActiveTab?: (tab: string) => void) => {
   const [files, setFiles] = useState<MediaFile[]>([])
@@ -149,7 +149,7 @@ export const useMediaFiles = (ffmpegRef: React.RefObject<FFmpeg | null>, ffmpegL
             preview: URL.createObjectURL(file),
             metadata: { size: file.size, type: file.type },
             processing: false,
-            error: `Video too large (${(file.size / 1024 / 1024).toFixed(1)}MB). Maximum 200MB.`,
+            error: `Video too large (${(file.size / 1024 / 1024).toFixed(1)}MB). Maximum ${MAX_VIDEO_SIZE_MB}MB.`,
           }
           setFiles((prev) => prev.map((f) => (f.file === file ? errorFile : f)))
           addToast("Video file too large", "error")
@@ -159,7 +159,7 @@ export const useMediaFiles = (ffmpegRef: React.RefObject<FFmpeg | null>, ffmpegL
         }
       }
     }
-  }, [addToast, setActiveTab])
+  }, [])
 
   const deleteFile = useCallback((index: number) => {
     const fileToDelete = files[index]

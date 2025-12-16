@@ -15,9 +15,6 @@ export const useDragAndDrop = () => {
 
   const handleFilesSelected = useCallback((files: FileList | null) => {
     if (files) {
-      const syntheticEvent = {
-        target: { files },
-      } as React.ChangeEvent<HTMLInputElement>
       return Array.from(files)
     }
     return []

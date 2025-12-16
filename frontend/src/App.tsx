@@ -7,6 +7,7 @@ import { DashboardSection } from "./components/DashboardSection"
 import { ImageToolsSection } from "./components/ImageToolsSection"
 import { VideoToolsSection } from "./components/VideoToolsSection"
 import { SettingsSection } from "./components/SettingsSection"
+import { CloudStorageGallery } from "./components/CloudStorageGallery"
 import { useToast } from "./hooks/useToast"
 import { useFFmpeg } from "./hooks/useFFmpeg"
 import { useImageProcessor } from "./hooks/useImageProcessor"
@@ -28,7 +29,6 @@ export default function MediaProcessingApp() {
     handleDragLeave,
     handleFilesSelected: handleFilesSelectedDrag,
     handleDrop,
-    handleFileInputChange,
   } = useDragAndDrop()
 
   const {
@@ -52,13 +52,6 @@ export default function MediaProcessingApp() {
   const handleTabChange = useCallback((tabId: string) => {
     setActiveTab(tabId)
   }, [])
-
-  const handleFileInputChangeWrapper = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = handleFileInputChange(e)
-    if (files.length > 0) {
-      uploadFiles(files)
-    }
-  }, [handleFileInputChange, uploadFiles])
 
   const handleFilesSelectedWrapper = useCallback((files: FileList | null) => {
     if (files) {
@@ -133,6 +126,8 @@ export default function MediaProcessingApp() {
               onToggleExpand={handleToggleExpand}
             />
           )}
+
+          {activeTab === "cloud-storage" && <CloudStorageGallery activeTab={activeTab} />}
 
           {activeTab === "settings" && <SettingsSection />}
         </main>

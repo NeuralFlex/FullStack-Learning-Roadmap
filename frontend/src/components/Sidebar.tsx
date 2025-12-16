@@ -10,6 +10,7 @@ const NAVIGATION_ITEMS: NavigationItem[] = [
   { id: "dashboard", label: "Dashboard", icon: "📊" },
   { id: "images", label: "Image Tools", icon: "🖼️" },
   { id: "videos", label: "Video Tools", icon: "🎬" },
+  { id: "cloud-storage", label: "Cloud Storage", icon: "☁️" },
   { id: "settings", label: "Settings", icon: "⚙️" },
 ]
 

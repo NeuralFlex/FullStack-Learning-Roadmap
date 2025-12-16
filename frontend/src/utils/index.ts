@@ -17,3 +17,16 @@ export function parseIntWithFallback(input: string, fallback: number): number {
 export function parseFloatWithFallback(input: string, fallback: number): number {
   return Number.parseFloat(input) || fallback;
 }
+
+/**
+ * Formats file size in human readable units.
+ * @param bytes - The file size in bytes.
+ * @returns The formatted file size with appropriate unit.
+ */
+export function formatFileSize(bytes: number): string {
+  if (bytes === 0) return '0 Bytes';
+  const k = 1024;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}

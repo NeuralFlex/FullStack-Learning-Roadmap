@@ -85,3 +85,5 @@ export const ImageToolsSection: React.FC<ImageToolsSectionProps> = React.memo(({
     </section>
   )
 })
+
+ImageToolsSection.displayName = 'ImageToolsSection'

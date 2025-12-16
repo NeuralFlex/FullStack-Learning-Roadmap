@@ -58,11 +58,20 @@ export const useTrim = (initialStart: number = 0, initialEnd: number = 0) => {
   })
 
   const updateState = useCallback((updates: Partial<TrimState>) => {
-    setState(prev => ({ ...prev, ...updates }))
+    setState(prev => {
+      const newState = { ...prev, ...updates }
+      // Validate trimEnd >= trimStart
+      if (newState.end < newState.start) {
+        newState.end = newState.start
+      }
+      return newState
+    })
   }, [])
 
   const setTrimRange = useCallback((start: number, end: number) => {
-    setState({ start, end })
+    const validatedStart = Math.max(0, start)
+    const validatedEnd = Math.max(validatedStart, end)
+    setState({ start: validatedStart, end: validatedEnd })
   }, [])
 
   return { state, updateState, setTrimRange }
