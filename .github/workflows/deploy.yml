@@ -1,0 +1,101 @@
+name: Deploy to ECR
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build-and-push:
+    name: Build and Push Docker Images
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - service: frontend
+            context: ./frontend
+            dockerfile: ./frontend/Dockerfile
+          - service: backend
+            context: ./backend
+            dockerfile: ./backend/Dockerfile
+
+    steps:
+    - name: Set ECR Repository URI
+      id: ecr-uri
+      run: |
+        if [ "${{ matrix.service }}" = "frontend" ]; then
+          echo "uri=${{ secrets.ECR_FRONTEND_REPO }}" >> $GITHUB_OUTPUT
+        else
+          echo "uri=${{ secrets.ECR_BACKEND_REPO }}" >> $GITHUB_OUTPUT
+        fi
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Configure AWS CLI
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ secrets.AWS_REGION }}
+
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v2
+
+    - name: Build and tag Docker image
+      id: build-image
+      run: |
+        # Get ECR URI from previous step
+        IMAGE_URI=${{ steps.ecr-uri.outputs.uri }}
+        COMMIT_SHORT_SHA=$(echo ${{ github.sha }} | cut -c1-7)
+
+        # Build Docker image
+        docker build -f ${{ matrix.dockerfile }} -t ${{ matrix.service }}:latest ${{ matrix.context }}
+
+        # Tag with latest and commit SHA
+        docker tag ${{ matrix.service }}:latest $IMAGE_URI:latest
+        docker tag ${{ matrix.service }}:latest $IMAGE_URI:$COMMIT_SHORT_SHA
+
+        # Output the image URI for use in other steps
+        echo "image_uri=$IMAGE_URI" >> $GITHUB_OUTPUT
+        echo "commit_sha=$COMMIT_SHORT_SHA" >> $GITHUB_OUTPUT
+
+    - name: Push Docker image to ECR
+      run: |
+        IMAGE_URI=${{ steps.build-image.outputs.image_uri }}
+        COMMIT_SHORT_SHA=${{ steps.build-image.outputs.commit_sha }}
+
+        # Push both tags
+        docker push $IMAGE_URI:latest
+        docker push $IMAGE_URI:$COMMIT_SHORT_SHA
+
+        echo "✅ Successfully pushed ${{ matrix.service }} image:"
+        echo "  - $IMAGE_URI:latest"
+        echo "  - $IMAGE_URI:$COMMIT_SHORT_SHA"
+
+  output-uris:
+    name: Output Deployed Image URIs
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    if: success()
+
+    steps:
+    - name: Generate deployment summary
+      run: |
+        echo "🎉 CI/CD Deployment Complete!"
+        echo ""
+        echo "📦 Deployed Docker Images:"
+        echo ""
+        echo "Frontend Repository: ${{ secrets.ECR_FRONTEND_REPO }}"
+        echo "Frontend Image URI: ${{ secrets.ECR_FRONTEND_REPO }}:latest"
+        echo "Frontend Image URI (SHA): ${{ secrets.ECR_FRONTEND_REPO }}:$(echo ${{ github.sha }} | cut -c1-7)"
+        echo ""
+        echo "Backend Repository: ${{ secrets.ECR_BACKEND_REPO }}"
+        echo "Backend Image URI: ${{ secrets.ECR_BACKEND_REPO }}:latest"
+        echo "Backend Image URI (SHA): ${{ secrets.ECR_BACKEND_REPO }}:$(echo ${{ github.sha }} | cut -c1-7)"
+        echo ""
+        echo "📋 Next Steps:"
+        echo "Update your ECS task definitions or infrastructure manifests with these image URIs to deploy to your environment"
